@@ -158,6 +158,7 @@ int main(int argc, char **argv) {
     int mswitch = 0; //initialze to do not switch mode aka 0
     int leave = 0; //initialize to do not leave aka 0
     pid_t p2;
+    pid_t p3;
     char orig[1024];
     while(fgets(orig, 1024, stdin) != NULL) {
     //check for comments following a #
@@ -171,14 +172,31 @@ int main(int argc, char **argv) {
        char *split1 = ";";
        char **results = tokenify(orig2, split1);
        print_tokens(results);
-       int i=0;
-       //int *variable = {&mswitch, &leave};
-       while(results[i] != NULL) {
-       	  p2 = execute_process (results[i], mode, &mswitch, &leave);
-	  i++;
-       }
-       //exit_command(pid);
 
+       if(strcmp(mode,"Parallel") == 0){
+           int i=0;
+           while(results[i] != NULL) {
+              p3 = fork();
+              if(p3 == 0) {
+                  p2 = execute_process (results[i], mode, &mswitch, &leave);
+                  
+              }
+              else {
+                  int c;
+                  waitpid(p3, &c, WUNTRACED);
+                  kill(p3, SIGTERM);
+              }
+              i++;
+           }
+       }
+       else { //sequential
+           int i=0;
+           //int *variable = {&mswitch, &leave};
+           while(results[i] != NULL) {
+       	      p2 = execute_process (results[i], mode, &mswitch, &leave);
+	      i++;
+           }
+       }
         if(leave ==  1){
             printf ("Goodbye \n");
             free_tokens(results);
