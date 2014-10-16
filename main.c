@@ -67,28 +67,27 @@ int in_list(char *token, char *lookfor) {
     return 0; //false
 }
 
-void mode_switch(char *mode, char *token) {
+
+void mode_switch(char *mode, int *mswitch) {
     //0 is s, 1 is p (base case 0 being mode = 's')
-    if(in_list(token, "s")) {
+    if(*mswitch ==1) {
 	strcpy(mode,"Sequential"); //mode s
     }
-    if(in_list(token, "p")) {
+    if(*mswitch == 2) {
         strcpy(mode,"Parallel"); //mode p
-    }
-    else {
-        printf("%s\n", mode);
-    }
-    
+    } 
 }
 
 
-void exit_command(pid_t pid) {
-    exit(pid);
-
-}
 
 
-pid_t execute_process(char *token, char *mode) {
+//void exit_command(pid_t pid) {
+    //exit(pid);
+
+//}
+
+
+pid_t execute_process(char *token, char *mode, int *mswitch, int *leave) {
     //take the token with instrution and execute it
     pid_t p1 = fork();
     int c;
@@ -98,24 +97,48 @@ pid_t execute_process(char *token, char *mode) {
     //check if exit or mode before sending to execute_process
     	if(strcasestr(token, "mode") != NULL) {
         //if(p1 != 0) { //if parent process
-            wait(&c);
-            mode_switch(mode, token);
-	   
+            //wait(&c);
+             if(in_list(token, "s")) {
+	        // strcpy(mode,"Sequential"); //mode s
+		*mswitch = 1;
+    		}
+     	     if(in_list(token, "p")) {
+       		// strcpy(mode,"Parallel"); //mode p
+		*mswitch = 2;
+   		 }
+   	     else {
+       		 printf("%s\n", mode);
+                 //fflush(stdout);
+           // mode_switch(mode, token);
+		}
+	     kill(p1, SIGTERM);     
         }
     
     	if(strcasestr(token, "exit") != NULL) {
         //if(p1 != 0) { //if parent process
             wait(&c);
-            exit_command(getpid());
+            //exit_command(getpid());
+	    *leave = 1;
+            kill(p1, SIGTERM);
         }
+        
     }
     if(p1 == 0){ //if child process
-
+        //check if exit or mode before sending to execute_process
+    	if(strcasestr(token, "mode") != NULL) {
+            free_tokens(results2);
+	    return p1;
+        }
+    
+    	if(strcasestr(token, "exit") != NULL) {
+            free_tokens(results2);
+            return p1;
+        }
 	 if (execv (results2[0], results2) < 0) {
 	     fprintf (stderr, "execv failed: %s\n", strerror(errno));
 	 }
     }
-    free (results2);
+    free_tokens(results2);
     return p1;  
 }
 
@@ -130,6 +153,9 @@ int main(int argc, char **argv) {
     fflush(stdout);
     char *mode = malloc(11*sizeof(char));
     strcpy(mode,"Sequential"); //initialize to Sequential mode
+    int mswitch = 0; //initialze to do not switch mode aka 0
+    int leave = 0; //initialize to do not leave aka 0
+    pid_t p2;
     char orig[1024];
     while(fgets(orig, 1024, stdin) != NULL) {
     //check for comments following a #
@@ -144,18 +170,31 @@ int main(int argc, char **argv) {
        char **results = tokenify(orig2, split1);
        print_tokens(results);
        int i=0;
+       //int *variable = {&mswitch, &leave};
        while(results[i] != NULL) {
-       	  execute_process (results[i], mode);
+       	  p2 = execute_process (results[i], mode, &mswitch, &leave);
 	  i++;
        }
        //exit_command(pid);
 
-
+        if(leave ==  1){
+            printf ("Goodbye \n");
+            free_tokens(results);
+            free(orig2);
+            free(mode);
+	    exit(p2);
+	  }
         //AT END DON'T FORGET TO FREE THE TOKENS!!
         free_tokens(results);
         free(orig2);
+	//printf ("%d\n", mswitch);
+        if(mswitch != 0) {
+            mode_switch(mode,&mswitch);
+	    mswitch = 0;
+	}
+	
         
-        break;
+        //break;
         printf("%s", prompt);
         fflush(stdout);
     
