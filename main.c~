@@ -12,8 +12,10 @@
 #include <signal.h>
 #include <errno.h>
 
-//Ashley Jones and Laura Slade 
-//Proj02 
+/*Ashley Jones and Laura Slade 
+Proj02 
+Note: We worked on the entire project together so it is all both our code
+*/
 
 char** tokenify(char *s, char *chrs) {
     // your code here
@@ -97,7 +99,7 @@ pid_t execute_process(char *token, char *mode, int *mswitch, int *leave) {
     //check if exit or mode before sending to execute_process
     	if(strcasestr(token, "mode") != NULL) {
         //if(p1 != 0) { //if parent process
-            wait(&c);
+            //wait(&c);
              if(in_list(token, "s")) {
 	        // strcpy(mode,"Sequential"); //mode s
 		*mswitch = 1;

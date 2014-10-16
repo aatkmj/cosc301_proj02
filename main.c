@@ -12,8 +12,10 @@
 #include <signal.h>
 #include <errno.h>
 
-//Ashley Jones and Laura Slade 
-//Proj02 
+/*Ashley Jones and Laura Slade 
+Proj02 
+Note: We worked on the entire project together so it is all both our code
+*/
 
 char** tokenify(char *s, char *chrs) {
     // your code here
