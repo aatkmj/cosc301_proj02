@@ -177,14 +177,14 @@ int main(int argc, char **argv) {
            int i=0;
            while(results[i] != NULL) {
               p3 = fork();
-              if(p3 == 0) {
+              if(p3 != 0) {
                   p2 = execute_process (results[i], mode, &mswitch, &leave);
                   
               }
               else {
                   int c;
                   waitpid(p3, &c, WUNTRACED);
-                  kill(p3, SIGTERM);
+                  //kill(p3, SIGTERM);
               }
               i++;
            }
